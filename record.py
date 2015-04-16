@@ -12,7 +12,25 @@ from myoraw.myo_raw import MyoRaw
 import tools.my_curses as my_curses
 
 
-def main(std_screen):
+def _start_curses(std_screen, myo_raw, myo):
+    """Process in a curses environment."""
+
+    my_curses.init(std_screen)
+    last_key = -1
+    while True:
+        myo_raw.run(1)
+        std_screen.clear()
+        key = std_screen.getch()
+        if key != curses.ERR:
+            if key == my_curses.Key.ESCAPE or key == my_curses.Key.Q:
+                break
+            last_key = key
+        std_screen.addstr(10, 10, "Last key pressed : %d\n" % (last_key))
+        std_screen.addstr(0, 0, str(myo))
+        std_screen.refresh()
+
+
+def main():
     """Record programs's main function. Launched from command-line.
 
     Input args:
@@ -23,22 +41,8 @@ def main(std_screen):
     myo = MyoBuffer(myo_raw)
     myo_raw.connect()
 
-    my_curses.init(std_screen)
-
-    last_key = -1
     try:
-        while True:
-            myo_raw.run(1)
-            std_screen.clear()
-            key = std_screen.getch()
-            if key != curses.ERR:
-                if key == my_curses.Key.ESCAPE or key == my_curses.Key.Q:
-                    break
-                last_key = key
-            std_screen.addstr (10, 10, "Last key pressed : %d\n" % (last_key))
-            std_screen.addstr(0, 0, str(myo))
-            std_screen.refresh()
-
+        curses.wrapper(_start_curses, myo_raw, myo)
     except KeyboardInterrupt:
         pass
     finally:
@@ -46,4 +50,4 @@ def main(std_screen):
 
 
 if __name__ == "__main__":
-    curses.wrapper(main)
+    main()
