@@ -5,11 +5,14 @@
 the learning machine system.
 """
 
+import curses
 import sys
+from myo_buffer import MyoBuffer
 from myoraw.myo_raw import MyoRaw
+import tools.my_curses as my_curses
 
 
-def main():
+def main(std_screen):
     """Record programs's main function. Launched from command-line.
 
     Input args:
@@ -17,28 +20,30 @@ def main():
     """
 
     myo_raw = MyoRaw(sys.argv[1] if len(sys.argv) >= 2 else None)
+    myo = MyoBuffer(myo_raw)
     myo_raw.connect()
 
-    def proc_emg(emg, _):
-        """Called every time MYO send new EMG data."""
-        print emg
+    my_curses.init(std_screen)
 
-    def proc_imu(quat, acc, gyro):
-        """Called every time MYO send new IMU data."""
-        print quat, acc, gyro
-
-    myo.add_emg_handler(proc_emg)
-    myo.add_imu_handler(proc_imu)
-
-
+    last_key = -1
     try:
         while True:
             myo_raw.run(1)
+            std_screen.clear()
+            key = std_screen.getch()
+            if key != curses.ERR:
+                if key == 27:   # TODO(gilles) add keys enum
+                    break
+                last_key = key
+            std_screen.addstr (10, 10, "Last key pressed : %d\n" % (last_key))
+            std_screen.addstr(0, 0, str(myo))
+            std_screen.refresh()
 
     except KeyboardInterrupt:
         pass
     finally:
         myo_raw.disconnect()
 
-if __name__ == '__main__':
-    main()
+
+if __name__ == "__main__":
+    curses.wrapper(main)
