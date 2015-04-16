@@ -5,7 +5,16 @@
 """
 
 import curses
+from enum import Enum
 
+
+class Key(Enum):
+    """Enum representing keybord keys events.
+    Can be compared with getch()'s return value
+    """
+    SPACE = 32
+    ESCAPE = 27
+    Q = 113
 
 def init(std_screen):
     """Initialize curses window with custom parameters."""

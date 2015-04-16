@@ -32,7 +32,7 @@ def main(std_screen):
             std_screen.clear()
             key = std_screen.getch()
             if key != curses.ERR:
-                if key == 27:   # TODO(gilles) add keys enum
+                if key == my_curses.Key.ESCAPE or key == my_curses.Key.Q:
                     break
                 last_key = key
             std_screen.addstr (10, 10, "Last key pressed : %d\n" % (last_key))
