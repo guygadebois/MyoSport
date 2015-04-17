@@ -24,16 +24,17 @@ def _loop(std_screen, myo):
     """Reading loop. Outputs MYO's data. Loops until ESC or Q key is pressed."""
 
     period = 1. / const.reading_frame_rate
-    last_key = -1
+    key = "None"
     while True:
         start_time = time.time()
         std_screen.clear()
-        key = std_screen.getch()
-        if key != curses.ERR:
-            if key == my_curses.Key.ESCAPE or key == my_curses.Key.Q:
+        try:
+            key = std_screen.getkey()
+            if key == "q":
                 break
-            last_key = key
-        std_screen.addstr(10, 10, "Last key pressed : %d\n" % (last_key))
+        except curses.error:
+            pass
+        std_screen.addstr(10, 10, "Last key pressed : %s\n" % (key))
         std_screen.addstr(0, 0, str(myo))
         std_screen.refresh()
         sleep_time = period - (time.time() - start_time)
