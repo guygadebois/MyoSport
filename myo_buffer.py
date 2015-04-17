@@ -3,11 +3,16 @@
 # Please see LICENSE file for details.
 """This module defines the MyoBufer class."""
 
+from threading import Thread
 
-class MyoBuffer(object):
-    """This class bufferizes the last MYO's data received."""
+
+class MyoBuffer(Thread):
+    """A threaded class that bufferizes the last MYO's data received."""
 
     def __init__(self, myo_raw):
+        Thread.__init__(self)
+        self.__myo_raw = myo_raw
+        self.__stop_flag = False
         self.emg = []
         self.quat = []
         self.acc = []
@@ -24,6 +29,13 @@ class MyoBuffer(object):
         self.quat = new_quat
         self.acc = new_acc
         self.gyro = new_gyro
+
+    def run(self):
+        while not self.__stop_flag:
+            self.__myo_raw.run()
+
+    def stop(self):
+        self.__stop_flag = True
 
     def __str__(self):
         return ("EMG => %s\nQUAT=> %s\nACC => %s\nGYRO => %s"

@@ -7,18 +7,26 @@ the learning machine system.
 
 import curses
 import sys
+from threading import Thread
+import time
 from myo_buffer import MyoBuffer
 from myoraw.myo_raw import MyoRaw
+import project_const as const
 import tools.my_curses as my_curses
 
 
-def _start_curses(std_screen, myo_raw, myo):
-    """Process in a curses environment."""
+class TooHighLatency(Exception):
+    """TODO(gilles): Add doc"""
+    pass
 
-    my_curses.init(std_screen)
+
+def _loop(std_screen, myo):
+    """Reading loop. Outputs MYO's data. Loops until ESC or Q key is pressed."""
+
+    period = 1. / const.reading_frame_rate
     last_key = -1
     while True:
-        myo_raw.run(1)
+        start_time = time.time()
         std_screen.clear()
         key = std_screen.getch()
         if key != curses.ERR:
@@ -28,6 +36,17 @@ def _start_curses(std_screen, myo_raw, myo):
         std_screen.addstr(10, 10, "Last key pressed : %d\n" % (last_key))
         std_screen.addstr(0, 0, str(myo))
         std_screen.refresh()
+        sleep_time = period - (time.time() - start_time)
+        if sleep_time < 0:
+            raise TooHighLatency
+        time.sleep(max(sleep_time, 0))
+
+
+def _start_curses(std_screen, myo):
+    """Process in a curses environment."""
+
+    my_curses.init(std_screen)
+    _loop(std_screen, myo)
 
 
 def main():
@@ -40,12 +59,15 @@ def main():
     myo_raw = MyoRaw(sys.argv[1] if len(sys.argv) >= 2 else None)
     myo = MyoBuffer(myo_raw)
     myo_raw.connect()
+    myo.start()
 
     try:
-        curses.wrapper(_start_curses, myo_raw, myo)
+        curses.wrapper(_start_curses, myo)
     except KeyboardInterrupt:
         pass
     finally:
+        myo.stop()
+        myo.join()
         myo_raw.disconnect()
 
 
