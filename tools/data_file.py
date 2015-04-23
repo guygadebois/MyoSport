@@ -82,7 +82,29 @@ class FileHeader(_Factory):
 
 class GestureHeader(_Factory):
     """A header class that describes a recorded gesture data."""
-    pass                        # TODO(gilles) implement the class.
+
+    # Format string must be updated when adding/removing member variables
+    # that need to be packed into data file.
+    format_string = "<ii"
+    struct_size = struct.calcsize(format_string)
+
+    def __init__(self,
+                 samples_nbr=0,
+                 next_gesture_offset=-1):
+        self.samples_nbr = samples_nbr
+        self.next_gesture_offset = next_gesture_offset
+
+    def is_last_gesture(self):
+        """Returns True if gesture is the last of the data file."""
+        return self.next_gesture_offset != -1
+
+    def pack_into_file(self, bin_file):
+        """Packs class contents into a binary struct, and write it into the
+        specified binary file."""
+        bin_file.write(struct.pack(self.format_string,
+                                   self.samples_nbr,
+                                   self.next_gesture_offset))
+
 
 
 
