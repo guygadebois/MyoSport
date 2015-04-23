@@ -106,6 +106,53 @@ class GestureHeader(_Factory):
                                    self.next_gesture_offset))
 
 
+class GestureSample(_Factory):
+    """A class containing data for one sample of a recorded gesture."""
+
+    # Format string must be updated when adding/removing member variables
+    # that need to be packed into data file.
+    format_string = "<iiiiiiiiiiiiiiiiii"
+    struct_size = struct.calcsize(format_string)
+
+    def __init__(self, *args):
+        """A sample can be initialized either by passing 18 integers or 4 lists.
+        > _Factory.unpack_from_files passes 18 integers by unrolling:
+        emg(8 integers), quat(4 integers), acc(3 integers), gyro(3 integers)
+        > Any other manual way to initialize GestureSample should be done by
+        passing 4 lists representing, in order: emg, quat, acc, gyro"""
+        if len(args) == 18:
+            self.emg = args[:8]
+            self.quat = args[8:12]
+            self.acc = args[12:15]
+            self.gyro = args[15:]
+        elif len(args) == 4:
+            emg = args[0]
+            quat = args[1]
+            acc = args[2]
+            gyro = args[3]
+
+            assert len(emg) == 8
+            assert len(quat) == 4
+            assert len(acc) == 3
+            assert len(gyro) == 3
+
+            self.emg = tuple(emg)
+            self.quat = tuple(quat)
+            self.acc = tuple(acc)
+            self.gyro = tuple(gyro)
+        else:
+            assert False
+
+    def pack_into_file(self, bin_file):
+        """Packs class contents into a binary struct, and write it into the
+        specified binary file."""
+        assert len(self.emg) == 8
+        assert len(self.quat) == 4
+        assert len(self.acc) == 3
+        assert len(self.gyro) == 3
+
+        args = self.emg + self.quat + self.acc + self.gyro
+        bin_file.write(struct.pack(self.format_string, *args)) # pylint: disable=star-args
 
 
 ################################################################################
