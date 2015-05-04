@@ -20,11 +20,22 @@ class TooHighLatency(Exception):
     pass
 
 
+def _start_recording(std_screen):
+    """Starts recording process."""
+    std_screen.bkgd(' ', curses.color_pair(my_curses.ColorPair.RECORDING))
+
+
+def _stop_recording(std_screen):
+    """Stops recording process."""
+    std_screen.bkgd(' ', curses.color_pair(my_curses.ColorPair.DEFAULT))
+
+
 def _loop(std_screen, myo):
     """Reading loop. Outputs MYO's data. Loops until ESC or Q key is pressed."""
 
     period = 1. / const.reading_frame_rate
     key = "None"
+    recording = False
     while True:
         start_time = time.time()
         std_screen.clear()
@@ -32,6 +43,12 @@ def _loop(std_screen, myo):
             key = std_screen.getkey()
             if key == "q":
                 break
+            if key == " ":
+                recording = not recording
+                if recording:
+                    _start_recording(std_screen)
+                else:
+                    _stop_recording(std_screen)
         except curses.error:
             pass
         std_screen.addstr(10, 10, "Last key pressed : %s\n" % (key))

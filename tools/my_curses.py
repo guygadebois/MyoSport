@@ -16,6 +16,8 @@ class ColorPair(IntEnum):
 
 def init(std_screen):
     """Initialize curses window with custom parameters."""
+    curses.start_color()
+    curses.init_pair(ColorPair.RECORDING, curses.COLOR_WHITE, curses.COLOR_RED)
     curses.curs_set(0)
     std_screen.nodelay(True)
 
