@@ -5,6 +5,13 @@
 """
 
 import curses
+from enum import IntEnum
+
+
+class ColorPair(IntEnum):
+    """An enum that represents color pairs for curses."""
+    DEFAULT = 0
+    RECORDING = 1
 
 
 def init(std_screen):
