@@ -155,6 +155,54 @@ class GestureSample(_Factory):
         bin_file.write(struct.pack(self.format_string, *args)) # pylint: disable=star-args
 
 
+class Gesture(object):
+    """A class representing a whole gesture recording.
+    Contains a header and a list of samples.
+    """
+
+    def __init__(self, gesture_header=None, samples=None):
+        """A Gesture can be initialized either by instanciating a new Gesture
+        or by calling 'unpack_from_file()'.
+        Arguments should be None when instanciating a new Gesture."""
+        if gesture_header is None:
+            self.header = GestureHeader()
+        else:
+            assert type(gesture_header) == GestureHeader
+            self.header = gesture_header
+        if samples is None:
+            self.samples = []
+        else:
+            self.samples = samples
+
+    def append_sample(self, emg, quat, acc, gyro):
+        """Appends a sample at the end of the gesture."""
+        self.samples.append(GestureSample(emg, quat, acc, gyro))
+        self.header.samples_nbr += 1
+
+    def pack_into_file(self, bin_file):
+        """Packs gesture header and samples into the specified binary file."""
+        assert self.header.samples_nbr > 0
+
+        offset = bin_file.tell() # Get current offset in file.
+        offset += GestureHeader.struct_size
+        offset += self.header.samples_nbr * GestureSample.struct_size
+        self.header.next_gesture_offset = offset
+
+        self.header.pack_into_file(bin_file)
+        for sample in self.samples:
+            sample.pack_into_file(bin_file)
+
+    @classmethod
+    def unpack_from_file(cls, bin_file):
+        """Creates a Gesture instance by reading
+        header and samples from the specified binary file."""
+        header = GestureHeader.unpack_from_file(bin_file)
+        samples = []
+        for _ in range(header.samples_nbr):
+            samples.append(GestureSample.unpack_from_file(bin_file))
+        return Gesture(header, samples)
+
+
 ################################################################################
 #     UNIT TESTS
 ################################################################################
@@ -189,7 +237,17 @@ def unit_test_struct():
     assert header3.__dict__ != header2.__dict__
 
 
+def unit_test_complete_packing():
+    """Tests packing/unpacking a whole recording into binary file."""
+
+    print ("    - Testing packing a whole recording...")
+
+    # TODO
+    pass
+
+
 if __name__ == "__main__":
     print ("Testing data_file module:")
     unit_test_struct()
+    unit_test_complete_packing()
     print ("Test succeeded.")
