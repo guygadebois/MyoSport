@@ -303,8 +303,53 @@ def unit_test_complete_packing():
 
     print ("    - Testing packing a whole recording...")
 
-    # TODO
-    pass
+    recording1 = Recording()
+    recording1.set_player_id(42)
+    recording1.set_gesture_type(GestureType.FOREHAND_SMASH)
+
+    # Fill recording with 10 gestures of arbitrary values.
+    print ("        > Generating a 10 gestures' recording.")
+    for i in range(10):
+        gesture = Gesture()
+        for j in range(200):
+            emg = [(i+j), (i+j), (i+j), (i+j), (i+j), (i+j), (i+j), (i+j)]
+            quat = [(i+j)*10, (i+j)*10, (i+j)*10, (i+j)*10]
+            acc = [(i+j)*100, (i+j)*100, (i+j)*100]
+            gyro = [(i+j)*1000, (i+j)*1000, (i+j)*1000]
+            gesture.append_sample(emg, quat, acc, gyro)
+        recording1.append_gesture(gesture)
+
+    file_name = "data_file_complete_test.dat"
+    if os.path.isfile(file_name):
+        os.remove(file_name)
+
+    print ("        > Writing recording into binary file.")
+    with open(file_name, "wb") as bin_file:
+        recording1.pack_into_file(bin_file)
+    print ("        > Reading recording from binary file.")
+    with open(file_name, "rb") as bin_file:
+        recording2 = Recording.unpack_from_file(bin_file)
+
+    print ("        > Checking read recording integrity.")
+    assert recording1.file_header.__dict__ == recording2.file_header.__dict__
+    for i in range(recording1.file_header.get_gestures_nbr()):
+        # Compare recording1._gestures[i] with recording2._gestures[i]
+        dict1 = recording1.gestures[i].header.__dict__
+        dict2 = recording2.gestures[i].header.__dict__
+        assert dict1 == dict2
+        for j in range(recording1.gestures[i].header.samples_nbr):
+            sample1 = recording1.gestures[i].samples[j]
+            sample2 = recording2.gestures[i].samples[j]
+            if sample1.__dict__ != sample2.__dict__:
+                print ("### ERROR: READ SAMPLE MISMATCH ###")
+                print ("recording1._gestures[%d]._samples[%d] =" % (i, j))
+                print (recording1.gestures[i].samples[j].__dict__)
+                print ("recording2._gestures[%d]._samples[%d] =" % (i, j))
+                print (recording2.gestures[i].samples[j].__dict__)
+                assert False
+
+    if os.path.isfile(file_name):
+        os.remove(file_name)
 
 
 if __name__ == "__main__":
