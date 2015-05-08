@@ -203,6 +203,67 @@ class Gesture(object):
         return Gesture(header, samples)
 
 
+class Recording(object):
+    """A class representing a set of gestures, recorded all at once.
+    Contains a file header and a list of gestures."""
+
+    def __init__(self, file_header=None, gestures=None):
+        """A Recording can be initialized either by instanciating a new
+        Recording or by calling 'unpack_from_file()'.
+        Arguments should be None when instanciating a new Recording."""
+        if file_header is None:
+            self.file_header = FileHeader()
+        else:
+            assert type(file_header) == FileHeader
+            self.file_header = file_header
+        if gestures is None:
+            self.gestures = []
+        else:
+            self.gestures = gestures
+
+    def set_player_id(self, player_id):
+        """Set a new value to file_header.player_id."""
+        assert type(player_id) == int
+        self.file_header.player_id = player_id
+
+    def set_gesture_type(self, gesture_type):
+        """Set a new value to file_header.gesture_type."""
+        assert type(gesture_type) == GestureType
+        self.file_header.gesture_type = gesture_type
+
+    def append_gesture(self, gesture):
+        """Appends a gesture to the set."""
+        assert type(gesture) == Gesture
+        self.gestures.append(gesture)
+        self.file_header._gestures_nbr += 1
+
+    def pack_into_file(self, bin_file):
+        """Packs file header and gestures into the specified binary file."""
+        assert self.file_header.get_gestures_nbr() > 0
+        assert self.file_header.player_id >= 0
+        assert self.file_header.gesture_type != GestureType.UNKNOWN
+
+        self.file_header.pack_into_file(bin_file)
+        for gesture in self.gestures:
+            gesture.pack_into_file(bin_file)
+
+    @classmethod
+    def unpack_from_file(cls, bin_file):
+        """Creates a Recording instance by reading
+        file header and gestures from the specified binary file."""
+        file_header = FileHeader.unpack_from_file(bin_file)
+        gestures = []
+        for _ in range(file_header.get_gestures_nbr()):
+            gestures.append(Gesture.unpack_from_file(bin_file))
+
+        # Make sure whe have reached the end of the file.
+        file_position = bin_file.tell()
+        bin_file.seek(0, os.SEEK_END)
+        end_file_position = bin_file.tell()
+        assert file_position == end_file_position
+        return Recording(file_header, gestures)
+
+
 ################################################################################
 #     UNIT TESTS
 ################################################################################
