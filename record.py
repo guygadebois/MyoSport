@@ -78,10 +78,11 @@ def record(player_id, gesture_type):
         TODO(gilles): Add doc when implementing arguments parsing.
     """
 
-    myo_raw = MyoRaw(sys.argv[1] if len(sys.argv) >= 2 else None)
-    myo = MyoBuffer(myo_raw)
-    myo_raw.connect()
-    myo.start()
+    # myo_raw = MyoRaw(sys.argv[1] if len(sys.argv) >= 2 else None)
+    # myo = MyoBuffer(myo_raw)
+    # myo_raw.connect()
+    # myo.start()
+    myo = 42
 
     rec_object = Recording()
     rec_object.set_gesture_type(gesture_type)
@@ -91,10 +92,10 @@ def record(player_id, gesture_type):
         curses.wrapper(_start_curses, myo, rec_object)
     except KeyboardInterrupt:
         pass
-    finally:
-        myo.stop()
-        myo.join()
-        myo_raw.disconnect()
+    # finally:
+    #     myo.stop()
+    #     myo.join()
+    #     myo_raw.disconnect()
 
 
 if __name__ == "__main__":
