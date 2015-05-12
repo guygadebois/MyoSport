@@ -13,6 +13,7 @@ import struct
 
 class GestureType(IntEnum):
     """An enum mapping every gesture to a number."""
+    __MIN__ = 0
     UNKNOWN = 0
     FOREHAND_SMASH = 1
     FOREHAND_SMASH_JUMP = 2
@@ -26,6 +27,7 @@ class GestureType(IntEnum):
     BACKEND_DROP_SHOT = 10
     BACKEND_NET_SHOT = 11
     BACKEND_NET_KILL = 12
+    __MAX__ = 12
 
 
 class _Factory(object):         # pylint: disable=too-few-public-methods
