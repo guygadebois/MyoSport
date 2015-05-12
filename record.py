@@ -5,10 +5,12 @@
 the learning machine system.
 """
 
+import argparse
 import curses
 import sys
 from threading import Thread
 import time
+from tools.data_file import Recording, GestureType
 from myo_buffer import MyoBuffer
 from myoraw.myo_raw import MyoRaw
 import project_const as const
@@ -67,7 +69,7 @@ def _start_curses(std_screen, myo):
     _loop(std_screen, myo)
 
 
-def main():
+def record(player_id, gesture_type):
     """Record programs's main function. Launched from command-line.
 
     Input args:
@@ -90,4 +92,16 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Records gestures using Myo.")
+    parser.add_argument("player_id",
+                        type=int,
+                        help="a positive integer representing the player's ID.")
+    parser.add_argument("gesture_type",
+                        type=int,
+                        help="a positive integer representing a gesture type.")
+    args = parser.parse_args()
+    if args.player_id < 0:
+        parser.error("player_id must be a positive integer.")
+    if args.gesture_type < GestureType.__MIN__ or args.gesture_type > GestureType.__MAX__:
+        parser.error("gesture_type must be between %d and %d" % (GestureType.__MIN__, GestureType.__MAX__))
+    record(args.player_id, GestureType(args.gesture_type))
