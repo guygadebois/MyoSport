@@ -22,18 +22,20 @@ class TooHighLatency(Exception):
     pass
 
 
-def _start_recording(std_screen):
+def _start_recording(std_screen, rec_object):
     """Starts recording process."""
     std_screen.bkgd(' ', curses.color_pair(my_curses.ColorPair.RECORDING))
 
 
-def _stop_recording(std_screen):
+def _stop_recording(std_screen, rec_object):
     """Stops recording process."""
     std_screen.bkgd(' ', curses.color_pair(my_curses.ColorPair.DEFAULT))
 
 
-def _loop(std_screen, myo):
-    """Reading loop. Outputs MYO's data. Loops until ESC or Q key is pressed."""
+def _loop(std_screen, myo, rec_object):
+    """Reading loop. Outputs MYO's data.
+    Toggles recording when SPACE is pressed.
+    Loops until ESC or Q key is pressed."""
 
     period = 1. / const.reading_frame_rate
     key = "None"
@@ -48,9 +50,9 @@ def _loop(std_screen, myo):
             if key == " ":
                 recording = not recording
                 if recording:
-                    _start_recording(std_screen)
+                    _start_recording(std_screen, rec_object)
                 else:
-                    _stop_recording(std_screen)
+                    _stop_recording(std_screen, rec_object)
         except curses.error:
             pass
         std_screen.addstr(10, 10, "Last key pressed : %s\n" % (key))
@@ -62,11 +64,11 @@ def _loop(std_screen, myo):
         time.sleep(max(sleep_time, 0))
 
 
-def _start_curses(std_screen, myo):
+def _start_curses(std_screen, myo, rec_object):
     """Process in a curses environment."""
 
     my_curses.init(std_screen)
-    _loop(std_screen, myo)
+    _loop(std_screen, myo, rec_object)
 
 
 def record(player_id, gesture_type):
@@ -81,8 +83,12 @@ def record(player_id, gesture_type):
     myo_raw.connect()
     myo.start()
 
+    rec_object = Recording()
+    rec_object.set_gesture_type(gesture_type)
+    rec_object.set_player_id(player_id)
+
     try:
-        curses.wrapper(_start_curses, myo)
+        curses.wrapper(_start_curses, myo, rec_object)
     except KeyboardInterrupt:
         pass
     finally:
